@@ -1,0 +1,63 @@
+ruleset a8x183 {
+    meta {
+        name "Testing Response Headers"
+
+    // Author: Sam Curren
+    // Origin: http://stackoverflow.com/questions/6350509/krl-getting-the-location-header-from-an-httppost
+    // Tags: #post #autoraise #defaction #encode
+
+        description <<
+
+        >>
+        author "Sam Curren"
+        logging off
+    }
+
+    dispatch {
+        // domain "example.com"
+    }
+
+    global {
+        bodylog = defaction(title, msg){
+            {
+            append("body", "<h1>#{title}</h1>");
+            append("body", "<div>#{msg}</div>");
+            }
+        };
+    }
+
+    rule first_rule {
+        select when pageview ".*" setting ()
+        pre {
+
+        }
+        http:post("http://httpbin.org/post") setting (res)
+            with params = {"username":"yahuda","password":"metalcages"}
+            and autoraise = "kickstand"
+            and response_headers = ["server"];
+        fired {
+            raise explicit event "moon" with res = res;   
+        }
+    }
+
+    rule exp {
+        select when explicit moon 
+        pre {
+            res = event:param("res");
+            res_s = res.encode();
+        }
+        bodylog("explicit raise: full response", res_s);
+    }
+
+    rule response {
+        select when http post label "kickstand"
+        pre {
+            server_header = event:param("server");
+            content = event:param("content");
+        }
+        {
+            bodylog("autoraise: content", content);
+            bodylog("autoraise: server_header", server_header);
+}
+    }
+}
