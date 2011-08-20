@@ -1,0 +1,28 @@
+ruleset a8x165 {
+    meta {
+        name "UUID Module Example"
+
+    // Author: Sam Curren
+    // Origin: http://stackoverflow.com/questions/5725444/generating-a-guid-uuid-in-krl
+    // Tags: #uuid #module
+
+        description <<
+            Example use of the UUID Module
+        >>
+        author "Sam Curren"
+        logging off
+        use module a8x164 alias uuid
+    }
+
+    dispatch {}
+
+    global {}
+
+    rule first_rule {
+        select when pageview ".*" setting ()
+        pre {
+            testuuid = uuid:new_uuid();
+        }
+        notify("Hello World", "This is a UUID: #{testuuid}");
+    }
+}
