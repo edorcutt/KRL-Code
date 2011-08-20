@@ -1,0 +1,35 @@
+ruleset a369x175 {
+  meta {
+    name "test-json-filtering"
+
+    // Author: Alex Olson
+    // Origin: http://stackoverflow.com/questions/5560455/using-jsonpath-looking-for-a-string
+    // Tags: #pick #dataset
+
+    description <<
+
+    >>
+    author "AKO"
+    logging on
+  }
+
+  dispatch {
+      domain "exampley.com"
+  }
+
+  global {
+    dataset merchant_dataset <- "https://s3.amazonaws.com/app-files/dev/merchantJson.json" cachable for 2 seconds
+  }
+
+  rule filter_some_delicous_json {
+    select when pageview "exampley.com"
+    pre {
+        merchant_data = merchant_dataset.pick("$.merchants[?(@.merchant eq 'Telefora')]");
+    }
+    {
+        emit <|
+            try { console.log(merchant_data); } catch(e) { }
+        |>;
+    }
+  }
+}
