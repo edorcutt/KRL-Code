@@ -1,0 +1,118 @@
+ruleset a421x68 {
+	meta {
+		name "test-hmac"
+    // Author: Randall Bohn
+    // Origin: http://stackoverflow.com/questions/6062201/krl-signing-requests-with-hmac-sha1
+    // Tags: #math:hmac #uri:escape #defaction
+		description <<
+			Test the various hmac functions.
+            		Expected values from Python.
+			http://ktest.heroku.com/a421x68
+		>>
+		author "Randall Bohn"
+		logging on
+	}
+
+	dispatch {
+		// domain "example.com"
+	}
+
+	global {
+        css <<
+          #results { font-family: monospace; }
+          .pass { background: #cfc; }
+          .fail { background: #fcc; }
+          >>;
+        secret="uV3F3YluFJax1cknvbcGwgjvx4QpvB+leU8dUj2o";
+        row3 = function(a,b,c) {
+            passfail = (b eq c) => "pass" | "fail";
+            "<tr class='#{passfail}'><td>#{a}</td><td>#{b}</td><td>#{c}</td><#tr>"
+        }
+
+	}
+
+      rule mktable {
+            select when pageview ".*"
+            {
+                append("#main","<table id='results' border='1'><tr><th>Scheme</th><th>Expected</th><th>Actual</th></tr></table>");
+                append("#main", "<div><a href='https://convore.com/kynetx/hmac-test-cases/'>Discuss</a></div>");
+            }
+      }
+      rule xpassfail is inactive {
+            select when pageview ".*"
+            {
+                append("#results", row3("shouldpass", "pass", "pass"));
+                append("#results", row3("shouldfail", "pass", "fail"));
+            }
+      }
+    rule jefe2 is inactive {
+        // see rule jefe_x
+        select when pageview ".*"
+        pre {
+            _key = "Jefe";
+            _data = "what do ya want for nothing?";
+            _digest = math:hmac_sha1_hex(_data, _key);
+            _hex = "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79";
+        }
+        {
+            append("#results", row3("hmac_sha1_hex(#{_data},#{_key})", _hex, _digest));
+        }
+    }
+    rule jefe_x {
+        select when pageview ".*"
+        pre {
+            k = "Jefe";
+            sample3=<<GET
+>>;
+            sig_hex = function(s, p) {
+                d = math:hmac_sha1_hex(s, k);
+                e = uri:escape(s);
+                row3("hmac_sha1_hex(#{e},#{k})", p, d)
+            }
+        } 
+        {
+            append("#results", sig_hex("what do ya want for nothing?", "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79"));
+            append("#results", sig_hex("GET", 'c04f07aca186c58b9ac546a8daf964d6563d5a60'));
+            append("#results", sig_hex(sample3, 'aafe005bb0b318f9922ffe3e4064360d7093d3ce'));
+            append("#results", sig_hex('ABCDEFGHIJKLMNOPQRSTUVWXYZ', '2d0ddf6e6251371ed98eaa3ecb36181f5328d513'));
+        }
+    }
+	rule table1 {
+		select when pageview ".*"
+		pre {
+            aws_example = <<GET
+
+
+Wed, 28 Mar 2007 01:29:59 +0000
+/>>;
+            //aws_example = <<GET\n\n\nWed, 28 Mar 2007 01:29:59 +0000\n/>>;
+                sha1xbase64 = defaction(_msg, _expected) {
+                    _actual = math:hmac_sha1_base64(_msg, secret);
+                    tr = row3("hmac_sha1_base64()", _expected, _actual);
+                    append("#results", tr);
+                };
+                sha1xhex = defaction(_msg, _expected) {
+                  _actual = math:hmac_sha1_hex(_msg, secret);
+                  tr = row3("hmac_sha1_hex()", _expected, _actual);
+                  append("#results", tr);
+                };
+                sha256xbase64 = defaction(_msg, _expected) {
+                  _actual = math:hmac_sha256_base64(_msg, secret);
+                  tr = row3("hmac_sha256_base64()", _expected, _actual);
+                  append("#results", tr);
+                };
+                sha256xhex = defaction(_msg, _expected) {
+                  _actual = math:hmac_sha256_hex(_msg, secret);
+                  tr = row3("hmac_sha256_hex()", _expected, _actual);
+                  append("#results", tr);
+                };
+            }
+		
+            {
+                sha1xbase64(aws_example,'Db+gepJSUbZKwpx1FR0DLtEYoZA=');
+                sha1xhex(aws_example,'0dbfa07a925251b64ac29c75151d032ed118a190');
+                sha256xbase64(aws_example,'XqnC+gs2YrGnY1vQxVKXhisAxeKmLDIJW3vXlvCBb9Y=');
+                sha256xhex(aws_example,'5ea9c2fa0b3662b1a7635bd0c55297862b00c5e2a62c32095b7bd796f0816fd6');
+            }
+      }
+}
