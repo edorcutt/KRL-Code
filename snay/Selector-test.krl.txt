@@ -1,0 +1,40 @@
+ruleset a163x61 {
+  meta {
+    name "Selector test"
+
+    // Author: Steve Nay
+    // Origin: http://stackoverflow.com/questions/5442892/can-i-use-the-operator-in-a-krl-query-selector
+    // Tags: #query
+
+    description <<
+        Testing the query() function
+    >>
+    author "Steve Nay"
+    logging on
+  }
+
+  dispatch {
+  }
+
+  global {
+    the_url = "http://students.cs.byu.edu/~snay2/content.html";
+
+    recent = function() {
+        t = http:get(the_url).pick("$..content");
+        // This produces an array.
+        text = t.query("div.recent-transfer>div");
+        // We want the text out of the element. Get the first element.
+        text[0];
+        // This won't work; throws a "NOT_FOUND_ERR: DOM Exception 8"
+        //text;
+    };   
+  }
+
+  rule first_rule {
+    select when pageview ".*" setting ()
+    pre {
+        disp = recent();
+    }
+    notify("Content:", disp) with sticky=true;
+  }
+}
