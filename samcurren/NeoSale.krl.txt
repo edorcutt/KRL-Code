@@ -1,0 +1,132 @@
+ruleset a8x72 {
+  meta {
+    name "NeoSale"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/621183
+
+    description <<
+      Selling the Neo Freerunner
+    >>
+    author "Sam Curren"
+    logging on
+    key twitter {
+      "consumer_key" : "<redacted>",
+      "consumer_secret" : "<redacted>",
+      "oauth_token":"<redacted>",
+      "oauth_token_secret":"<redacted>"
+    }
+  }
+
+  dispatch {}
+
+  global {
+    dataset highbid <- "https://spreadsheets.google.com/pub?key=<redacted>&single=true&gid=1&range=B1&output=txt" cachable for 1 second;
+    dataset winner <- "https://spreadsheets.google.com/pub?key=<redacted>&single=true&gid=1&range=B2&output=txt" cachable for 1 second;
+  }
+    
+  rule answercall is active {
+    select when twilio callstart
+    {
+      twilio:say("Thank you for your interest in buying Sam's Neo Freerunner");
+      twilio:pause(1);
+      twilio:say("The current high bid is #{highbid} dollars.");
+    }
+    fired {
+      raise explicit event getbid;
+    }
+  }
+      
+  rule getbid is active{
+    select when explicit getbid or twilio getbid
+    {
+      twilio:gather_start("phonebid");
+        twilio:say("Dial your bid in whole dollars. Hangup to not place a bid.");
+      twilio:gather_stop();
+      twilio:redirect("getbid");
+    }
+  }
+      
+  rule phonebid is active {
+    select when twilio phonebid
+    pre {
+      bidvalue = event:param("Digits");
+      bidder = event:param("Caller");
+    }
+    if bidvalue > highbid then {
+      http:post("https://spreadsheets.google.com/formResponse?formkey=<redacted>") with
+        params = {"entry.0.single":bidvalue, "entry.1.single":bidder, "submit":"Submit", "pageNumber":"0", "backupCache":""};
+      twilio:say("Your bid of #{bidvalue} dollars has been placed. Thank you!");
+    }
+    fired {
+      raise explicit event sendtweet with newmaxbid = bidvalue;
+    } else {
+      raise explicit event toolow;
+    }
+  }
+      
+  rule bidtoolow is active {
+    select when explicit toolow
+    {
+      twilio:say("Your bid is below the current high bid of #{highbid} dollars.");
+    }
+    fired {
+      raise explicit event getbid;
+    }
+  }
+      
+  rule sms is active {
+    select when twilio sms
+    pre {
+      messagetext = event:param("Body");
+      sender = event:param("From");
+      bidlist = messagetext.extract(re/([0-9]+)/i);
+    }
+    if(bidlist.length() > 0) then {
+        noop();
+    }
+    fired{
+      raise explicit event smsbid with bidvalue = bidlist.head() and sender = sender;
+    } else {
+      raise explicit event smshelp;
+    }
+  }
+      
+  rule smsbid is active {
+    select when explicit smsbid
+    pre {
+      bidder = event:param("sender");
+      bidvalue = event:param("bidvalue");
+    }
+    if(bidvalue > highbid) then {
+      http:post("https://spreadsheets.google.com/formResponse?formkey=<redacted>") with
+        params = {"entry.0.single":bidvalue, "entry.1.single":bidder, "submit":"Submit", "pageNumber":"0", "backupCache":""};
+      twilio:sms("Your bid of #{bidvalue} dollars has been placed. Thank you!");
+    }
+    fired {
+      raise explicit event sendtweet with newmaxbid = bidvalue;
+    } else {
+      raise explicit event smslow;
+    }
+  }
+      
+  rule smslow is active {
+    select when explicit smslow
+    twilio:sms("Your bid is below the current high bid of $#{highbid}. Reply with 'bid x' to bid x dollars.");
+  }
+    
+  rule smshelp is active {
+    select when explicit smshelp
+    twilio:sms("The current high bid for Sam's Neo FreeRunner is $#{highbid}. Reply with 'bid x' to bid x dollars.");
+  }
+    
+  rule tweet is active {
+    select when explicit sendtweet
+    pre {
+      newvalue = event:param("newmaxbid");
+      tweet = "New Bid! I'm now being sold for $#{newvalue}. Call to Bid: 801.988.9331 #utosc";
+    }
+    twitter:update(tweet);
+  }
+}
