@@ -1,0 +1,41 @@
+ruleset a8x152 {
+  meta {
+    name "if then else"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/905948
+
+    description <<
+        Demonstrates the power of actions to enable 'else' in krl!
+    >>
+    author "Sam Curren"
+    logging off
+  }
+
+  dispatch {
+    // Deploy via bookmarklet
+  }
+
+  global {
+    ifthenelse = defaction(cond, t, f){
+      a = cond => t | f; 
+      a();
+    };
+  }
+
+  rule first_rule {
+    select when pageview ".*" setting ()
+    pre { 
+        testcond = ent:counter % 2 == 1;
+    }
+    ifthenelse(
+        testcond, 
+        defaction(){notify("test","counter odd!");}, 
+        defaction(){notify("test","counter even!");}
+    );
+    always {
+        ent:counter += 1 from 1;
+    }
+  }
+}
