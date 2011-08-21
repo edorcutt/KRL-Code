@@ -1,0 +1,57 @@
+ruleset a163x40 {
+  meta {
+    name "TA Hours"
+
+    // KSLCode
+    // Author: Steve Nay
+    // Origin: https://gist.github.com/808876
+
+    description <<
+      Shows on the class website whether the TA is currently in his office hours
+    >>
+    author "Steve Nay"
+    logging off
+    
+    use module a8x114 alias officehours with url = "http://www.google.com/calendar/feeds/logih83e7lfku7ighp75l3qsp8%40group.calendar.google.com/public/basic"
+  }
+
+  dispatch {
+    domain "classes.windley.com"
+  }
+
+  global {
+    css <<
+      div.ta-hours {
+        display: block;
+        font-size: small;
+        border: 1px solid blue;
+        padding: 2px;
+        width: 100%;
+        margin-bottom: 5px;
+        background-color: silver;
+      }
+      .larger {
+        font-size: larger;
+        font-weight: bold;
+      }
+    >>;
+  }
+
+  rule ta_is_in {
+    select when web pageview "classes.windley.com/462/wiki"
+    pre {
+      message = <<
+        <div class="ta-hours">
+          <span class="larger">The TA is in!</span>
+          | Office: Cubicle 13
+          | <a href="mailto:steven.nay@gmail.com">Email</a>
+          | <a href="https://www.google.com/calendar/embed?mode=WEEK&height=600&wkst=1&bgcolor=%23FFFFFF&src=logih83e7lfku7ighp75l3qsp8%40group.calendar.google.com&color=%23060D5E&ctz=America/Denver">View office hours</a>
+        </div>
+      >>;
+    }
+    
+    if officehours:onnow("Office hours") then {
+      prepend('.firstHeading', message);
+    }
+  }
+}
