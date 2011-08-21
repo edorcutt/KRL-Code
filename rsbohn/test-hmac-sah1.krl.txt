@@ -1,0 +1,30 @@
+ruleset a421x67 {
+  meta {
+    name "test-hmac-sha1"
+
+    // KSLCode
+    // Author: Randall Bohn
+    // Origin: https://gist.github.com/980000
+
+    description "Test hmac_sha1_base64(msg, key) function"
+    author "Randall Bohn"
+    logging on
+  }
+  dispatch {}
+  global {}
+
+  rule hmac_test {
+    select when pageview ".*"
+    pre {
+        msg = "GET\n\n\nWed, 28 Mar 2007 01:29:59 +0000\n/";
+        stkey = "uV3F3YluFJax1cknvbcGwgjvx4QpvB+leU8dUj2o";
+        expected = "Db+gepJSUbZKwpx1FR0DLtEYoZA=";
+        actual = math:hmac_sha1_base64(msg, stkey);
+    }
+    {
+        append("#main", "<div>Example from <a href='http://docs.amazonwebservices.com/AmazonS3/latest/dev/RESTAuthentication.html'>AWS Docs</a></div>");
+        append("#main", "<div>expected: "+expected+"</div>");
+        append("#main", "<div>got: "+actual+"</div>");
+    }
+  }
+}
