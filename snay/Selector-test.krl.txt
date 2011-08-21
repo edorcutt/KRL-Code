@@ -2,9 +2,9 @@ ruleset a163x61 {
   meta {
     name "Selector test"
 
+    // KSLCode
     // Author: Steve Nay
     // Origin: http://stackoverflow.com/questions/5442892/can-i-use-the-operator-in-a-krl-query-selector
-    // Tags: #query
 
     description <<
         Testing the query() function

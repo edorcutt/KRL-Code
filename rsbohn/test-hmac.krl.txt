@@ -1,9 +1,11 @@
 ruleset a421x68 {
 	meta {
 		name "test-hmac"
+
+    // KSLCode
     // Author: Randall Bohn
     // Origin: http://stackoverflow.com/questions/6062201/krl-signing-requests-with-hmac-sha1
-    // Tags: #math:hmac #uri:escape #defaction
+
 		description <<
 			Test the various hmac functions.
             		Expected values from Python.

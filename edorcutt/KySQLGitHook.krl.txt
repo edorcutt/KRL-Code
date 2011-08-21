@@ -2,9 +2,9 @@ ruleset a169xXXX {
   meta {
     name "KySQLGitHook"
 
+    // KSLCode
     // Author: Ed Orcutt
     // Origin: https://gist.github.com/1150103
-    // Tags: #webhook #twitter
 
     description <<
       Kynetx Github commit webhook

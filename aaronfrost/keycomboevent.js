@@ -1,6 +1,6 @@
-    // Author: Aaron Frost
-    // Origin: http://www.40win.com/2011/05/08/jskeyboardevents/
-    // Tags: #emit
+// KSLCode
+// Author: Aaron Frost
+// Origin: http://www.40win.com/2011/05/08/jskeyboardevents/
 
 ctrlpressed = false;
 altpressed = false;

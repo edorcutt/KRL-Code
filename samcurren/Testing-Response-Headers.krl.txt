@@ -2,9 +2,9 @@ ruleset a8x183 {
     meta {
         name "Testing Response Headers"
 
-    // Author: Sam Curren
-    // Origin: http://stackoverflow.com/questions/6350509/krl-getting-the-location-header-from-an-httppost
-    // Tags: #post #autoraise #defaction #encode
+        // KSLCode
+        // Author: Sam Curren
+        // Origin: http://stackoverflow.com/questions/6350509/krl-getting-the-location-header-from-an-httppost
 
         description <<
 

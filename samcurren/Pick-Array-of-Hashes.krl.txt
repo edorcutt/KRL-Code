@@ -2,9 +2,9 @@ ruleset a8x167 {
     meta {
         name "Pick - Array of Hashes"
 
-    // Author: Sam Curren
-    // Origin: http://stackoverflow.com/questions/5781888/picking-an-array-of-hashes-from-a-hash
-    // Tags: #pick #hash
+        // KSLCode
+        // Author: Sam Curren
+        // Origin: http://stackoverflow.com/questions/5781888/picking-an-array-of-hashes-from-a-hash
 
         description <<
             Testing

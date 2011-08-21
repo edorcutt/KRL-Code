@@ -2,9 +2,9 @@ ruleset a8x165 {
     meta {
         name "UUID Module Example"
 
-    // Author: Sam Curren
-    // Origin: http://stackoverflow.com/questions/5725444/generating-a-guid-uuid-in-krl
-    // Tags: #uuid #module
+        // KSLCode
+        // Author: Sam Curren
+        // Origin: http://stackoverflow.com/questions/5725444/generating-a-guid-uuid-in-krl
 
         description <<
             Example use of the UUID Module

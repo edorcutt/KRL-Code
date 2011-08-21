@@ -2,9 +2,9 @@ ruleset a369x175 {
   meta {
     name "test-json-filtering"
 
+    // KSLCode
     // Author: Alex Olson
     // Origin: http://stackoverflow.com/questions/5560455/using-jsonpath-looking-for-a-string
-    // Tags: #pick #dataset
 
     description <<
 
