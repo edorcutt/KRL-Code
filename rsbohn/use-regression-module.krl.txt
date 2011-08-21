@@ -1,0 +1,39 @@
+ruleset a421x99 {
+    meta {
+      name "use regression module"
+
+      // KSLCode
+      // Author: Randall Bohn
+      // Origin: https://gist.github.com/983353
+
+      description << sample use of regression module >>
+      author "Randall Bohn"
+      use module a421x70 alias Regression
+    }
+
+    dispatch {}
+    global {
+    }
+   
+    rule examples {
+        select when pageview ".*"
+        pre {
+            
+        }
+        {
+            Regression:begin('results');
+            Regression:new_section("isEqual(description, a, b)");
+            append('#results', Regression:isEqual("YES", "sample1", "sample1"));
+            append('#results', Regression:isEqual("NOT EQUAL", "sample1", "Ouagadougou"));
+
+            Regression:new_section("isPositive(n)");
+            append('#results', Regression:isPositive(">0", 100));
+            append('#results', Regression:isPositive("NOT >0", -100));
+
+            Regression:new_section("inRange(low,high,n)");
+            append('#results', Regression:inRange(10,20, 12));
+            append('#results', Regression:inRange(10,20, 9));
+            append('#results', Regression:inRange(10,20, 21));
+        }
+    }
+}
