@@ -1,0 +1,47 @@
+ruleset a8x133 {
+  meta {
+    name "StackOverflow"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/882045
+
+    description <<
+
+    >>
+    author "Sam"
+    logging on
+  }
+
+  dispatch {
+  }
+
+  global {
+    so_qpm = function(){
+        apiurl = "http://api.stackoverflow.com/1.1/stats";
+        apiresponse = http:get(apiurl);
+        fullstats = apiresponse.pick("content").decode();
+        fullstats.pick("$..questions_per_minute");
+    };
+    double_rainbow = defaction(a){
+        //pre
+        b = a + 2;
+        
+        //actions
+        {
+            notify("StackOverflow", "Questions per minute: #{a}") with sticky = true;
+            notify("Second Notify", "Questions plus two: #{b}") with sticky = true;
+        }
+    };
+  }
+
+  rule first_rule {
+    select when pageview ".*" setting ()
+    pre {
+        qpm = so_qpm();
+    }
+    {
+        double_rainbow(qpm);
+    }
+  }
+}
