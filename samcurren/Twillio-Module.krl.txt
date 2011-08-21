@@ -1,0 +1,366 @@
+ruleset a8x115 {
+  meta {
+    name "Twilio Module"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/883521
+
+    description <<
+      Utility methods for interacting with Twilio
+    >>
+    author "Sam Curren"
+    logging on
+    
+    //keys for testing
+    key twilio {
+     "account_sid" : "--account_sid--",
+     "auth_token"  : "--auth_token--"
+    }
+    
+    configure using twiliokeys = {}
+    
+    provides 
+        //convenience methods
+        activecalls, confnumbers, 
+        //actions
+        send_sms, place_call, 
+        //output actions
+        say, play, gather_start, gather_stop, record, sms, 
+        dial, dial_conference, dial_start, dial_number, dial_stop, 
+        hangup, redirect, reject, pause, raw_response
+  }
+
+  dispatch {}
+
+  global {
+    thisappid = "a8x115";
+    
+    usekeys = twiliokeys || keys:twilio();
+  
+    account_sid = usekeys.pick("account_sid"); 
+    auth_token = usekeys.pick("auth_token"); 
+    
+    base_url = "https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/";
+    
+    //outgoing actions
+    send_sms = defaction(to, from, message){ 
+        http:post(base_url + "SMS/Messages")
+            with params = {
+                "From":from,
+                "To":to,
+                "Body":message
+            };
+    };
+
+    place_call = defaction(to, from, webhookurl){ 
+        http:post(base_url + "Calls")
+            with params = {
+                "From":from,
+                "To":to,
+                "Url":webhookurl
+            };
+    };
+    
+    //webhook actions
+    say = defaction(text){
+        configure using voice = null
+                and language = null
+                and loop = null
+        send_directive("say") 
+        with text = text
+            and voice = voice
+            and language = language
+            and loop = loop;
+    };
+    play = defaction(url){
+        configure using loop = null
+        send_directive("play") 
+        with url = url
+            and loop = loop;
+    };
+    gather_start = defaction(action){
+        configure using method = null
+                    and timeout = null
+                    and finishOnKey = null
+                    and numDigits = null
+        send_directive("gather_start") 
+        with action = action
+            and method = method
+            and timeout = timeout
+            and finishOnKey = finishOnKey
+            and numDigits = numDigits;
+    };
+    gather_stop = defaction(){
+        send_directive("gather_stop") 
+    };
+    record = defaction(action){
+        configure using method = null
+                    and timeout = null
+                    and finishOnKey = null
+                    and maxLength = null
+                    and transcribe = null
+                    and transcribeCallback = null
+                    and playBeep = null
+        send_directive("record") 
+            with action = action
+            and method = method
+            and timeout = timeout
+            and finishOnKey = finishOnKey
+            and maxLength = maxLength
+            and transcribe = transcribe
+            and transcribeCallback = transcribeCallback
+            and playBeep = playBeep;
+    };
+    sms = defaction(text){
+        configure using to = null
+                    and from = null
+                    and action = null
+                    and method = null
+                    and statusCallback = null
+        send_directive("sms") 
+            with text = text
+            and to = to
+            and from = from
+            and action = action
+            and method = method
+            and statusCallback = statusCallback;
+    };
+    dial = defaction(number){
+        configure using action = null
+                    and method = null
+                    and timeout = null
+                    and hangupOnStar = null
+                    and timeLimit = null
+                    and callerId = null
+        send_directive("dial") 
+        with number = number
+            and action = action
+            and method = method
+            and timeout = timeout
+            and hangupOnStar = hangupOnStar
+            and timeLimit = timeLimit
+            and callerId = callerId;
+    };
+    dial_conference = defaction(name){
+        configure using action = null
+                    and method = null
+                    and timeout = null
+                    and hangupOnStar = null
+                    and timeLimit = null
+                    and callerId = null
+                    and muted = null
+                    and beep = null
+                    and startConferenceOnEnter = null
+                    and endConferenceOnExit = null
+                    and waitUrl = null
+                    and waitMethod = null
+                    and maxParticipants = null
+        send_directive("dial_conference") 
+        with name = name
+            and action = action
+            and method = method
+            and timeout = timeout
+            and hangupOnStar = hangupOnStar
+            and timeLimit = timeLimit
+            and callerId = callerId
+            and muted = muted
+            and beep = beep
+            and startConferenceOnEnter = startConferenceOnEnter
+            and endConferenceOnExit = endConferenceOnExit
+            and waitUrl = waitUrl
+            and waitMethod = waitMethod
+            and maxParticipants = maxParticipants;
+    };
+    dial_start = defaction(){
+        configure using action = null
+                    and method = null
+                    and timeout = null
+                    and hangupOnStar = null
+                    and timeLimit = null
+                    and callerId = null
+        send_directive("dial_start") 
+        with action = action
+            and method = method
+            and timeout = timeout
+            and hangupOnStar = hangupOnStar
+            and timeLimit = timeLimit
+            and callerId = callerId;
+    };
+    number = defaction(number){
+        configure using sendDigits = null
+                    and url = null
+        send_directive("number") 
+        with number = number
+            and sendDigits = sendDigits
+            and url = url;
+    };
+    dial_stop = defaction(){
+        send_directive("dial_stop");
+    };
+    hangup = defaction(){
+        send_directive("hangup");
+    };
+    redirect = defaction(url){
+        configure using method = null
+        send_directive("redirect") 
+        with url = url
+            and method = method;
+    };
+    reject = defaction(){
+        configure using reason = null
+        send_directive("reject") 
+            with reason = reason;
+    };
+    pause = defaction(){
+        //configure using length = null
+        send_directive("pause");
+            //with length = lengthh;
+    };
+    raw_response = defaction(xml){
+        send_directive("rawresponse") 
+            with xml = xml;
+    };
+    
+    //returns calls, adding tofrom as a call attribute, which resolves to the 'other persons' number
+    activecalls = function(){
+      rawcalls = make_call("Calls", { 'Status':'in-progress' }).pick("$.calls");
+      calls = rawcalls.map(function(c){
+        tofromnum = (c.pick("$.direction") eq "inbound" => c.pick("$.from") | c.pick("$.to"));
+        c.put({'tofrom':tofromnum});
+      });
+      calls;
+    };
+    confnumbers = function(confname){
+      confsid = activeconfsid(confname);
+      psids = confparticipantsids(confsid);
+      //get active calls
+      calls = activecalls();
+      //translate psids into numbers with call info
+      nums = psids.map(function(sid){
+        matchedcall = calls.filter(function(c){
+          c.pick("sid") eq sid;
+        });
+        matchedcall.head().pick("tofrom");
+      });
+      nums;
+    };
+
+    //api util methods
+    make_call = function(relurl, args){
+      response = http:get(base_url + relurl + ".json", args);
+      response.pick("content").decode();
+    };
+    activeconfsid = function(confname){
+      conflookup = make_call("Conferences", { 'Status':'in-progress', 'FriendlyName':confname });
+      conflookup.pick("total") > 0 => conflookup.pick("$..conferences[0].sid") | 0;
+    };
+    confparticipantsids = function(confsid){
+      confparticipants = make_call("Conferences/#{confsid}/Participants", {});
+      psids = confparticipants.pick("$.participants").map(function(p){p.pick("$.call_sid")});
+      psids;
+    };
+    
+    //testing util functions
+    eventbutton = function(event, label){
+      b = " <input type=\"button\" value=\"#{label}\" onclick=\"KOBJ.get_application('#{thisappid}').raise_event('#{event}');\"/> <br/>";
+      b;
+    };
+  }
+
+
+  rule testrunner {
+    select when pageview ".*"
+    pre {   
+      tests = <<
+        #{eventbutton("confsid", "Test confsid")}
+        #{eventbutton("confpsids", "Test conf caller sids")}
+        #{eventbutton("tactivecalls", "Active Calls")}
+        #{eventbutton("tconfnumbers", "Conference Numbers")}
+        #{eventbutton("sendsms", "Send SMS")}
+        #{eventbutton("placecall", "Place Call")}
+      >>;
+    }
+    notify("Twilio Util Module Tests", tests) with sticky = true;
+  }
+  
+  rule confsid {
+    select when web confsid
+    pre {
+      confsid = activeconfsid("conf99");
+      message = confsid => "Conf Sid: #{confsid}" | "No conf99 found";
+    }
+    notify("confsid test", message);
+  }
+  
+  rule confpsids {
+    select when web confpsids
+    pre {
+      confsid = activeconfsid("conf99");
+      callersids = confparticipantsids(confsid);
+      message = callersids.encode();
+    }
+    notify("conf caller sids", message) with sticky = true and width = "500px";
+  }
+  rule tactivecalls {
+    select when web tactivecalls
+    pre {
+      calls = activecalls();
+      message = calls.encode();
+    }
+    notify("active calls", message) with sticky = true and width = "500px";
+  }
+  
+  rule tconfnumbers {
+    select when web tconfnumbers
+    pre {
+      numbers = confnumbers("conf99");
+      //start here
+      message = numbers.encode();
+    }
+    notify("conference numbers", message) with sticky = true and width = "500px";
+  }
+  
+  rule sendsms {
+    select when web sendsms
+      {
+          send_sms("8015551212","+18015551212", "test message from twilio module");
+          notify("sms sent", "SMS has been sent!");
+      }
+    }
+    
+  rule placecall {
+      select when web placecall
+      {
+          place_call("8015551212","+18015551212", "http://webhooks.kynetxapps.net/t/a8x83/callstart");
+          notify("call placed", "The call has been placed");
+      }
+  }
+  // test via http://webhooks.kynetxapps.net/t/a8x115.dev/test
+  rule testdirectives {
+    select when twilio test
+    {
+        say("test say");
+        say("test say loop") with loop = 2;
+        say("test voice") with voice = "woman";
+        gather_start("fooaction");
+            play("http://www.google.com/sound.mp3");
+        gather_stop(); 
+        sms("my message");
+        record("recordaction");
+        dial("8014713443");
+        dial_conference("myconf");
+        dial_start();
+            number("1112223333");
+            number("2223334444");
+        dial_stop();
+        hangup();
+        redirect("redirecturl");
+        reject();
+        pause();
+    }
+  }
+
+  
+  
+}
