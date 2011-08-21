@@ -1,0 +1,98 @@
+ruleset a163x63 {
+  meta {
+    name "StringBin module"
+
+    // KSLCode
+    // Author: Steve Nay
+    // Origin: https://gist.github.com/890894
+
+    description <<
+        Module for the StringBin API (http://stringbin.com/).
+        Version 1 of the API provides two functions: read and write. While
+        the API provides the ability to use callbacks, this is not reflected
+        here, as they are not necessary in the context of KRL.
+    >>
+    author "Steve Nay"
+    logging off
+    
+    key stringbin {
+        "pin": "--redacted--"
+    }
+    
+    // Module functionality
+    configure using stringbinkeys = {}
+    provides read, write
+  }
+
+  dispatch {}
+
+  global {
+    thisappid = "a163x63";
+    usekeys = stringbinkeys || keys:stringbin();
+    usepin = usekeys.pick("pin");
+    
+    // Using version 1 of the API.
+    base_url = "http://api.stringbin.com/1";
+    read_url = "#{base_url}/read";
+    write_url = "#{base_url}/write";
+    
+    // Reads the given key from StringBin
+    read = function(key) {
+        response = http:get(read_url, {"pin": usepin, "key": key});
+        value = response.pick("$..content").decode().pick("$..string");
+        value;
+    };
+    
+    // Writes the given key-value pair to StringBin. Returns true if there were no errors
+    write = function(key, value) {
+        response = http:get(write_url, {"pin": usepin, "key": key, "value": value});
+        error = response.pick("$..content").decode().pick("$..error");
+        error == "false";
+    };
+    
+    // Function for raising events to test module functionality
+    // Based on Sam's example here: https://gist.github.com/883521
+    eventbutton = function(event, label){
+        b = " <input type=\"button\" value=\"#{label}\" onclick=\"KOBJ.get_application('#{thisappid}').raise_event('#{event}');\"/> <br/>";
+        b;
+    };
+
+  }
+
+  // Display a notify to send events for testing the functions
+  rule testrunner {
+    select when pageview ".*"
+    pre {   
+    tests = <<
+        #{eventbutton("sb_read", "Test read")}
+        #{eventbutton("sb_write", "Test write")}
+    >>;
+    }
+    notify("StringBin module tests", tests) with sticky = true;
+  }
+
+  // Test the read function
+  rule test_read {
+    select when web sb_read
+    pre {
+        sb_key = "sb_module_test";
+        sb_value = read(sb_key);
+        msg = "The value of #{sb_key} is '#{sb_value}'.";
+    }
+    notify("StringBin module tests", msg);
+  }
+
+  // Test the write function
+  rule test_write {
+    select when web sb_write
+    pre {
+      sb_key = "sb_module_test";
+      sb_value = time:now();
+      resp = write(sb_key, sb_value);
+      msg = "Successfully wrote '#{sb_value}' to #{sb_key}.";
+    }
+    if resp then {
+        notify("StringBin module tests", msg);
+    }
+  }
+}
