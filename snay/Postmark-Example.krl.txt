@@ -1,0 +1,48 @@
+ruleset a163x75 {
+  meta {
+    name "Postmark example"
+
+    // KSLCode
+    // Author: Steve Nay
+    // Origin: https://gist.github.com/902158
+
+    description <<
+        Uses the Postmark module to send an email when called through a bookmarklet
+    >>
+    author "Steve Nay"
+    logging off
+    
+    key postmark {
+        "key": "--redacted--",
+        "sender": "steve@scnay.com"
+    }
+    
+    use module a163x74 alias postmark with postmarkkeys = keys:postmark()
+  }
+
+  dispatch {}
+
+  global {}
+
+  rule send_message {
+    select when pageview ".*"
+    {
+        postmark:send_email() with to = "steven.nay@gmail.com"
+            and subject = "Testing from KRL with module from separate app"
+            and htmlbody = "<p>This is a test message sent from the Postmark KRL module</p>";
+        notify("Postmark", "Email sent successfully (?)");
+    }
+  }
+  
+  rule result {
+    select when http post label "postmark_send"
+    pre {
+        content_type = event:param("content_type");
+        content_length = event:param("content_length");
+        content = event:param("content");
+        status_line = event:param("status_line");
+        status_code = event:param("status_code");
+    }
+    notify("Result was...", content) with sticky=true;
+  }
+}
