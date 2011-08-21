@@ -1,0 +1,84 @@
+ruleset a421x69 {
+    meta {
+	name "try-peav"
+
+        // KSLCode
+        // Author: Randall Bohn
+        // Origin: https://gist.github.com/982124
+
+	description <<
+			Try out Ed Orcutt's PeepsOnEAv module.
+	>>
+	author "Randall Bohn"
+	logging on
+        use module a421x70 alias Regression
+        use module a169x322 alias PeepsOnEAv
+        
+    }
+
+    dispatch {
+	// domain "example.com"
+    }
+
+    global {
+        css <<
+        .fail { background: #fcc; }
+        .pass { background: #cfc; }
+        #results { font-family: monospace; }
+        >>;
+
+        tWithEav = "edorcutt";
+        tWithoutEav = "solargroovy";
+    }
+
+    rule grace {
+	select when pageview "exampley.com"
+        append("body", "<div id='main'></div>");
+    }
+    rule set_up {
+        select when pageview ".*"
+        pre {
+        }
+        {
+            //append("#main", "<table border='1' id='results'></table>");
+            Regression:begin("#main");
+            append("#main", "<div><a href='https://convore.com/kynetx/may-module-madness/'>Discuss</a></div>");
+        }
+    }
+    
+    rule ticker {
+        select when pageview ".*"
+        pre {
+            ed = PeepsOnEAv:TickerSymbol(tWithEav);
+            sg = PeepsOnEAv:TickerSymbol(tWithoutEav);
+        }
+        {
+            Regression:isEqual("TickerSymbol(#{tWithEav})", "EDOISM", ed);
+            Regression:isEqual("TickerSymbol(#{tWithoutEav})", "@solargroovy", sg);
+        }
+    } 
+    
+    rule prices {
+        select when pageview ".*"
+        pre {
+            price0 = PeepsOnEAv:SharePrice(tWithEav);
+            price1 = PeepsOnEAv:SharePrice(tWithoutEav);
+        }
+        {
+            Regression:isPositive("SharePrice(#{tWithEav})", price0);
+            Regression:isPositive("SharePrice(#{tWithoutEav})", price1);
+        }
+    }
+    
+    rule profile_url {
+        select when pageview ".*"
+        pre {
+            url0 = PeepsOnEAv:ProfileURL(tWithEav);
+            url1 = PeepsOnEAv:ProfileURL(tWithoutEav);
+        }
+        {
+            Regression:isEqual("ProfileURL(#{tWithEav})", "http://www.empireavenue.com/EDOISM", url0);
+            Regression:isEqual("ProfileURL(#{tWithoutEav})", "http://www.empireavenue.com/ipo/twitter/solargroovy", url1);
+        }
+    }
+}
