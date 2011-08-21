@@ -1,0 +1,55 @@
+ruleset a421x54 {
+	meta {
+		name "Fun With jQuery UI"
+
+                // KSLCode
+                // Author: Randall Bohn
+                // Origin: https://gist.github.com/932087
+
+		description <<
+			Fun Fun Fun
+		>>
+		author "Randall Bohn"
+		logging off
+        
+        use css resource jquery_ui_smoothness_css
+        use javascript resource jquery_ui_js
+	}
+
+	dispatch {
+		// domain "example.com"
+	}
+
+	global {
+        css <<
+            #mapleton { margin-left: 20px }
+        >>;
+
+	}
+
+    rule zero {
+        select when pageview ".*"
+        pre {
+            content = <<
+            <div id="mapleton">
+            <img src="http://lorempixum.com/g/240/180" alt="Lorem Pixum"></img>
+            <div>Soon this will all be but a happy memory. &mdash;Roberts</div>
+            </div>
+            >>;
+            source_link=<<
+            <div>See the source <a href="https://gist.github.com/932087">Gist 932087</a>.</div>
+            >>;
+        }
+        {
+            append("#main", content);
+            append("#content", source_link);
+        }
+    }
+	rule first_rule {
+		select when pageview ".*" setting ()
+		pre {
+		
+		}
+		jquery_ui:effect("#main","puff","slow") with delay = 10;
+	}
+}
