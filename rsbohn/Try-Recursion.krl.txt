@@ -1,0 +1,57 @@
+ruleset a421x45 {
+  meta {
+    name "Try Recursion"
+
+    // KSLCode
+    // Author: Randall Bohn
+    // Origin: https://gist.github.com/908348
+
+    description <<
+Try some recursion
+    >>
+    author "Randall Bohn"
+    logging on
+  }
+
+  dispatch {
+    // Some example dispatch domains
+    // domain "example.com"
+    // domain "other.example.com"
+  }
+
+  global {
+    recursively_append = defaction(location, alist) {
+        item = alist.head(); 
+        alen = alist.length();
+        
+        anext = 
+        alen > 1 =>
+        defaction() {
+            {
+                append(location, "<li>#{item}</li>");
+                recursively_append(location, alist.tail());
+            }
+        } |
+        defaction() {
+            append(location, "<li>#{item}</li>");
+        }
+        anext();
+    
+    }
+      
+    listify = defaction(title, alist) {
+        {
+            notify(title, "<ul id='special'></ul>");
+            recursively_append('#special', alist);
+        }
+    }
+
+  }
+
+  rule test_browsers is active {
+    select when pageview ".*" setting ()
+    pre { b = ["red","blue","green"] }
+    listify("colors", b);
+  }
+  
+}
