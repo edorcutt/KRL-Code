@@ -1,0 +1,30 @@
+// KSLCode
+// Author: Steve Nay
+// Origin: https://gist.github.com/1059053
+
+rule draw {
+    select when explicit draw
+    pre {
+        placeholder = event:param("placeholder");
+        html = <<
+            <div><form>
+                Last name: <input type="text" name="byufb_dir_last" class="inputtext" />
+                First name: <input type="text" name="byufb_dir_first" class="inputtext" />
+                <input type="button" value="Search" class="uiButton" onclick="byufb_dir_search_prep();"/>
+            </form></div>
+            <div id="byufb_dir_res" style="display:none">&nbsp;</div>
+        >>;
+    }
+    {
+        emit <|
+            byufb_dir_search_prep = function() {
+                $K("#byufb_dir_res").show();
+                $K("#byufb_dir_res").prepend('<img src="' + spinner_url + '" /><br />');
+                byufb_dir_search();
+            };
+        |>;
+        dialogue:get_data(["[name=byufb_dir_last]", "[name=byufb_dir_first]"], "val",
+            ["byufb_dir_last", "byufb_dir_first"], "directory_searched", "byufb_dir_search");
+        byufb:addsection("Directory", html, placeholder);
+    }
+}
