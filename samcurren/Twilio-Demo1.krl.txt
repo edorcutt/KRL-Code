@@ -1,0 +1,68 @@
+ruleset a8x60 {
+  meta {
+    name "Twilio Demo"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/559829
+
+    description <<
+      Demo for our main twilio number
+    >>
+    author "Sam Curren"
+    logging off
+  }
+
+  dispatch {
+  }
+
+  global {
+    datasource weather:XML <- "http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdBrowserClientByDay.php?format=24+hourly&numDays=1&zipCodeList="
+  }
+  
+  rule test is active {
+    select when web pageview ".*"
+    pre {
+      w = datasource:weather("84043");
+      maxtemp = w.pick("$..temperature[0].value.$t");
+      maxtemp = w.pick("$..temperature[1].value.$t");
+    }
+    notify("weather", "is here!");
+  }
+
+  rule callstart is active {
+    select when webhook callstart
+    pre {
+      xmlresponse = <<
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <Response>
+          <Play>http://k-misc.s3.amazonaws.com/resources/a8x60/Welcometokynetxdemo.wav</Play>
+          <Gather action="http://webhooks.kynetx.com:3098/h/a8x60/demochoice" numDigits="1" timeout="10">
+            <Say>Please press 1 to start the Demo!</Say>
+          </Gather>
+        </Response>
+      >>;
+    }
+    send_directive("xml") with body = "#{xmlresponse}";
+  }
+  
+  rule callstart is active {
+    select when webhook demochoice
+    pre {
+      w = datasource:weather(event:param("FromZip"));
+      maxtemp = w.pick("$..temperature[0].value.$t");
+      mintemp = w.pick("$..temperature[1].value.$t");
+      
+      xmlresponse = <<
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <Response>
+            <Say>The forcast for #{event:param("CallerCity")}, #{event:param("CallerState")} is a high temperature of #{maxtemp} and a low of #{mintemp}.</Say>
+            <Pause/>
+            <Say>End of Demo. Goodbye!</Say>
+        </Response>
+      >>;
+    }
+    send_directive("xml") with body = "#{xmlresponse}";
+  }
+  
+}
