@@ -1,0 +1,34 @@
+ruleset a421x14 {
+  meta {
+    name "more-true-fan"
+
+    // KSLCode
+    // Author: Randall Bohn
+    // Origin: https://gist.github.com/759297
+
+    description "Add OneTrueFan widget to a website"
+    author "Randall Bohn"
+    logging off
+  }
+
+  // add more domains here
+  dispatch {
+    domain "wingcash.com"
+  }
+
+  // Just .com here.
+  // Might be nice to check if the widget is already installed.
+  rule add_onetruefan {
+    select when pageview ".*"
+    pre {
+        script = <<
+            <script type='text/javascript'
+                src='http://e.onetruefan.com/js/widget.js>
+                </script>
+            >>;
+    }
+    {
+      append("body", script);
+    }
+  }
+}
