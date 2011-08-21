@@ -1,0 +1,70 @@
+ruleset a8x117 {
+  meta {
+    name "CallFromEmail"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/881990
+
+    description <<
+      Place a call on inbound email
+    >>
+    author "Sam Curren"
+    logging on
+    
+    key twilio {
+     "account_sid" : "--account_sid--",
+     "auth_token"  : "--auth_token--"
+    }
+  }
+
+  dispatch {
+    domain "usbchainsaw.com"
+  }
+
+  global { 
+  }
+
+  rule testing {
+    select when pageview ".*" setting ()
+    notify("CallFromEmail", "Testing call placed!");
+    fired {
+      raise explicit event "placecall" with message = "You have an unhealthy attraction to chainsaws";
+    }
+  }
+  
+  //send an email to a8x117.dev@kynetxapps.net to fire this rule
+  rule receiveemail {
+    select when mail received
+    pre {
+      subject = event:param("subject");
+      message = "You got an email with subject #{subject}";
+    }
+    {
+      email:delete();
+    };
+    fired {
+      raise explicit event "placecall" with message = message;
+    }
+  }
+  
+  rule placecall {
+    select when explicit placecall
+    pre {
+      message = event:param("message");
+    }
+    twilio:place_call("8018771564", "8016494601", "http://webhooks.kynetxapps.net/t/a8x117.dev/delivermessage");
+    //twilio:place_call("4354620197", "8016494601", "http://webhooks.kynetxapps.net/t/a8x117.dev/delivermessage");    fired {
+    fired {
+        set app:message message;
+    }
+  }
+  
+  rule delivermessage {
+    select when twilio delivermessage
+    pre {
+      message = app:message;
+    }
+    twilio:say(message);
+  }
+}
