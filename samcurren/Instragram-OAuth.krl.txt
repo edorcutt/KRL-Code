@@ -1,0 +1,149 @@
+ruleset a8x162 {
+  meta {
+    name "Instagram oauth without modules"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/931865
+
+    description <<
+Demonstrates calling oAuth protected APIs
+    >>
+    author "Sam Curren"
+    logging on
+    
+    key instagram {
+        "client_id": "--redacted--",
+        "client_secret":"--redacted--"
+    }
+  }
+
+  dispatch {
+  }
+
+  global {
+      thisappid = "a8x162";
+      
+    instagram_authorized = function(){
+        ent:instagram_access_token != 0;
+    };
+    instagram_authorize = defaction(){
+        a = ent:auth_in_progress => noop |
+        defaction(){
+            
+            authmessage = <<
+                You need to auth to Instagram.
+                <br/><br/>
+                <input type="button" value="Start Auth" onclick="KOBJ.get_application('#{thisappid}').raise_event('instagram_auth');"/>
+            >>;
+            notify("Authorize", authmessage) with sticky = true;
+        };
+        a();
+    };
+  }
+  
+  rule reset_all {
+    select when pageview "clearall"
+    noop();
+    fired {
+        clear ent:auth_in_progress;
+        clear ent:auth_redirect;
+        clear ent:instagram_access_token;
+    }
+  }
+  
+  rule auth_redirect {
+    select when web instagram_auth
+    pre {
+        client_id = keys:instagram("client_id");
+        caller = event:param("caller");
+    }
+    redirect("https://api.instagram.com/oauth/authorize/?client_id=#{client_id}&redirect_uri=http://ktest.heroku.com/a8x162&response_type=code");
+    fired {
+        set ent:auth_redirect caller;
+        set ent:auth_in_progress;
+    }
+  }
+
+    rule receive_access_code {
+        select when pageview "ktest.heroku.com/a8x162\?code=(.*)" setting (access_code)
+        pre {
+            p = {
+                "client_id": keys:instagram("client_id"),
+                "client_secret": keys:instagram("client_secret"),
+                "grant_type": "authorization_code",
+                "redirect_uri": "http://ktest.heroku.com/a8x162",
+                "code": access_code
+            };
+            
+        }
+        http:post("https://api.instagram.com/oauth/access_token") with params = p and autoraise = "tokenresponse";
+    }
+    
+    rule record_access_token {
+        select when http post label "tokenresponse" 
+        pre {
+            r = event:param("content").decode();
+            access_token = r.pick("access_token");
+            back_url = ent:auth_redirect;
+        }
+        redirect(back_url);
+        fired {
+            set ent:instagram_access_token access_token;
+            clear ent:auth_in_progress;
+            clear ent:auth_redirect;
+        }
+        
+    }
+
+  rule check_auth {
+    select when pageview ".*" setting ()
+    if not instagram_authorized() then
+        instagram_authorize();
+    //need a fired last here, when module doing auth
+  }
+  
+  rule display_auth {
+    select when pageview ".*"
+    pre {
+        at = ent:instagram_access_token;
+        atmessage = <<
+            #{at}
+            
+            <input type="button" value="clearat" onclick="KOBJ.get_application('#{thisappid}').raise_event('clearat');"/>
+        
+        >>;
+    }
+    if instagram_authorized() then
+        notify("access_token", "#{atmessage}") with sticky = true;
+  }
+  
+  rule clear_at {
+    select when web clearat
+    pre {
+        
+    }
+    notify("access token", "cleared");
+    fired {
+        clear ent:instagram_access_token;
+    }
+  }
+  
+  rule make_call {
+    select when pageview ".*"
+    pre {
+        selfinfo = function(){
+            r = http:get("https://api.instagram.com/v1/users/self/",{
+                    "access_token": ent:instagram_access_token
+                });
+            r.pick("content").decode();
+        };
+        
+        r = instagram_authorized() => selfinfo().encode() | "not authorized";
+    }
+    if instagram_authorized() then {
+        notify("results", r);   
+    }
+  }
+  
+}
