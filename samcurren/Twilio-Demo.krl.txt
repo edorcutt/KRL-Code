@@ -1,0 +1,117 @@
+ruleset a8x60 {
+  meta {
+    name "Twilio Demo"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/623106
+
+    description <<
+      Demo for our main twilio number
+    >>
+    author "Sam Curren"
+    logging off
+  }
+
+  dispatch {
+  }
+
+  global {
+    datasource weather:XML <- "http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdBrowserClientByDay.php?format=24+hourly&numDays=1&zipCodeList="
+  }
+
+  rule callstart is active {
+    select when twilio callstart
+    pre {
+    }
+    {
+      twilio:play("http://k-misc.s3.amazonaws.com/resources/a8x60/Welcometokynetxdemo.wav");
+    }
+    fired {
+      raise explicit event givemenu;
+    }
+  }
+  rule sampersonal is active {
+    select when twilio callstart From "\+18014713443" setting (from)
+    {
+      twilio:say("Welcome back Sam Curren.");
+      twilio:pause();
+    }
+  }
+  rule givemenu is active {
+    select when explicit givemenu or twilio givemenu
+    {
+    twilio:gather_start("demochoice") with numDigits = "1" and timeout="10";
+      twilio:say("Press 1 for Weather, 2 to be sent a text message, 3 for a conference with other callers, 4 for counter, or press 0 to end the call.");
+    twilio:gather_stop();
+    twilio:redirect('givemenu');
+    }
+      fired {
+        ent:menucounter += 1 from 1;
+      }
+  }
+  
+  rule weather is active {
+    select when twilio demochoice Digits "1"
+    pre {
+      w = datasource:weather(event:param("FromZip"));
+      maxtemp = w.pick("$..temperature[0].value.$t");
+      mintemp = w.pick("$..temperature[1].value.$t");
+      weathermessage = <<
+        The forcast for #{event:param("CallerCity")}, #{event:param("CallerState")} is a high temperature of #{maxtemp} and a low of #{mintemp}.
+      >>;
+    }
+    {
+      twilio:say("#{weathermessage}");
+      twilio:pause();
+    }
+  }
+  rule sendtext is active {
+    select when twilio demochoice Digits "2"
+    {
+      twilio:sms("This is from the Kynetx Demo Number");
+      twilio:say("Your text message has been sent.") with voice="woman";
+    }
+  }
+  rule conf is active {
+    select when twilio demochoice Digits "3"
+    {
+      twilio:say("You will be placed into a conference with other callers. You will hear music if no other callers are present. Press star to exit the conference");
+      twilio:dial_conference("confdemo") with hangupOnStar="true";
+    }
+  }
+  rule counter is active {
+    select when twilio demochoice Digits "4"
+      pre {
+      num = ent:menucounter;
+      }
+    {
+      twilio:say("You have heard the menu #{num} times");
+    }
+  }      
+  rule endcall is active {
+    select when twilio demochoice Digits "0"
+    {
+      twilio:say("Thank you for calling. Goodbye!");
+      twilio:hangup();
+    }
+  }
+  rule backtomenu is active {
+    select when twilio demochoice Digits "[1234]"
+    noop();
+    fired {
+      raise explicit event givemenu;
+    }
+  }
+  
+  rule invalidchoice is active {
+    select when twilio demochoice Digits "([56789])" setting (badchoice)
+    {
+      twilio:say("#{badchoice} is not a valid menu choice.");
+    }
+    fired {
+      raise explicit event givemenu;
+    }
+  }
+  
+}
