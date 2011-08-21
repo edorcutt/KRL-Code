@@ -1,0 +1,73 @@
+ruleset a163x85 {
+  meta {
+    name "RESTful web service"
+
+    // KSLCode
+    // Author: Steve Nay
+    // Origin: https://gist.github.com/911599
+
+    description <<
+        Experimenting with creating a RESTful web service with KRL
+    >>
+    author "Steve Nay"
+    logging off
+  }
+
+  dispatch {}
+
+  global {}
+
+  // Echoes the given body back to the caller
+  rule echo {
+    select when webhook echo
+    // Example URL: http://webhooks.kynetxapps.net/h/a163x85/echo?body=hi%20there
+    pre {
+        body = event:param("body");
+        response = {'body': body};
+        rjson = response.encode();
+    }
+    send_directive("json") with body = rjson;
+  }
+  
+  // Adds the "first" and "second" parameters and returns the sum
+  rule sum {
+    select when webhook add
+    // Example URL: http://webhooks.kynetxapps.net/h/a163x85/sum?first=1&second=2
+    pre {
+        first = math:int(event:param("first"));
+        second = math:int(event:param("second"));
+        sum = first + second;
+        response = {'sum': sum};
+        rjson = response.encode();
+    }
+    send_directive("json") with body = rjson;
+  }
+ 
+  // Increments a global counter starting from 0 and returns it
+  rule counter {
+    select when webhook counter
+    // Example URL: http://webhooks.kynetxapps.net/h/a163x85/counter
+    pre {
+        response = {'counter': math:int(app:counter)};
+        rjson = response.encode();
+    }
+    send_directive("json") with body = rjson;
+    fired {
+        app:counter += 1 from 1; //Incremented after returning; effectively starts at 0
+    }
+  }
+
+  // Increments a caller-specific counter starting from 0 and returns it (requires cookies)
+  rule ent_counter {
+    select when webhook ent_counter 
+    // Example URL: http://webhooks.kynetxapps.net/h/a163x85/ent_counter
+    pre {
+        response = {'counter': math:int(ent:counter)};
+        rjson = response.encode();
+    }
+    send_directive("json") with body = rjson;
+    fired {
+        ent:counter += 1 from 1; //Incremented after returning; effectively starts at 0
+    }
+  }
+}
