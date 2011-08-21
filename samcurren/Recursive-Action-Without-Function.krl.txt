@@ -1,0 +1,38 @@
+ruleset a8x153 {
+  meta {
+    name "recursive action without function"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/908468
+
+    description <<
+        Runs a recursive action without a function to create the recursive step.
+        Base case is handled by the nexta defaction conditional expression.
+    >>
+    author "Sam Curren"
+    logging off
+  }
+
+  dispatch {
+  }
+
+  global {
+    r = defaction(n){
+        effect = defaction(x){
+            notify("run", x);
+        };
+        nexta = 
+            n > 0 => 
+            defaction(){ {effect(n); r(n-1);} } | 
+            defaction(){  effect(n); };  
+        
+        nexta();
+    };
+  }
+
+  rule run {
+    select when pageview ".*" setting ()
+    r(3);
+  }
+}
