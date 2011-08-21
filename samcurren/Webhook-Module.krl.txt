@@ -1,0 +1,72 @@
+ruleset a8x157 {
+  meta {
+    name "Webhook Module"
+
+    // KSLCode
+    // Author: Sam Curren
+    // Origin: https://gist.github.com/996138
+
+    description <<
+        Provides actions for working with the Kynetx Webhook Endpoint
+    >>
+    author "Sam Curren"
+    logging off
+    
+    provides text, html, json, xml, js, redirect
+  }
+
+  dispatch {}
+
+  global {
+    text = defaction(textstring){
+        send_directive("text") with body = textstring;   
+    };
+    html = defaction(htmlstring){
+        send_directive("html") with body = htmlstring;  
+    };
+    json = defaction(json){
+        jstring = json.encode();
+        send_directive("json") with body = jstring;
+    };
+    xml = defaction(xmlstring){
+        send_directive("xml") with body = xmlstring;  
+    };
+    js = defaction(jsstring){
+        send_directive("js") with body = jsstring;
+    };
+    redirect = defaction(url){
+        send_directive("redirect") with url = url;  
+    };
+  }
+
+  rule test_text {
+    select when webhook testtext setting ()
+    text("mytesting");
+  }
+  
+  rule test_html {
+    select when webhook testhtml setting ()
+    html("<h1>Testing HTML</h1>");
+  }
+  
+  rule test_json {
+    select when webhook testjson setting ()
+    json({"mytest":"myvalue"});
+  }
+  
+  rule test_xml {
+    select when webhook testxml setting ()
+    xml("<myxml>myvalue</myxml>");
+  }
+  
+  rule test_js {
+    select when webhook testjs setting ()
+    js("alert();");
+  }
+  
+  rule test_redirect {
+      select when webhook testredirect setting ()
+      redirect("http://www.baconsalt.com");
+  }
+
+}
