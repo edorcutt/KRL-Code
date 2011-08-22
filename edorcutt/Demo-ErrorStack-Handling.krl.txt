@@ -1,0 +1,52 @@
+ruleset a169x391 {
+  meta {
+    name "Demo-ErrorStack-Handling"
+
+    description <<
+      Test Ruleset for error handling to ErrorStack
+      http://www.windley.com/archives/2011/05/error_handling_in_krl.shtml
+      http://docs.kynetx.com/docs/Error_handling
+
+      http://ktest.heroku.com/a169x391
+    >>
+
+    key errorstack "YOUR KEY HERE"
+
+    use module a16x104 alias es
+      with es_key = keys:errorstack()
+
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+  }
+
+  dispatch { }
+
+  global { }
+
+  // ------------------------------------------------------------------------
+  rule throw_error {
+    select when pageview ".*"
+    {
+      notify("Error Handling Demo", "throw an error ...") with sticky = true;
+    }
+    fired {
+      error info "a user generated error"
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  rule process_error {
+    select when system error or user error
+    pre {
+      genus = event:param("genus");
+      species = event:param("species");
+    }
+    es:send_error("(#{genus}:#{species}) " + event:param("msg"))
+      with rule_name = event:param("rule_name")
+       and rid = event:param("rid");
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
