@@ -1,0 +1,18 @@
+ruleset a60x11 {
+  meta {
+    name "The basics of basic"
+    author "Michael Grace"
+    description <<
+      The basics of basic
+    >>
+    logging on
+  }
+
+  rule my_first_kynetx_app {
+    select when pageview ".*"
+    {
+      notify("Title of notify","Content of notify") with sticky = true;
+    }
+  }
+
+}
