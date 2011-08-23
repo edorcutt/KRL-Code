@@ -1,0 +1,205 @@
+ruleset a169x320 {
+  meta {
+    name "PeerIndex-Module-Test"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: https://gist.github.com/980215
+
+    description <<
+      Test PeerIndex API Module
+      http://exampley.com/?appid=a169x320
+    >>
+
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+
+    use module a169x319 alias PeerIndex with peerindexkey = "REDACT KEY"
+  }
+
+  dispatch {}
+  global {
+    testValidTwitterUsername = "edorcutt";
+    testInvalidTwitterUsername = "bogusxxx333";
+    testPass = "<span class='testpass'>Passed</span>";
+    testFail = "<span class='testfail'>Failed</span>";
+
+    css <<
+      .testpass {color:green;}
+      .testfail {color:red;}
+    >>
+  }
+  // ------------------------------------------------------------------------
+  rule Test_Start {
+    select when pageview ".*"
+    pre {
+      msg = <<
+        <h3>PeerIndex Module Test Results</h3>
+        <p>
+          Valid Twitter Username: #{testValidTwitterUsername}</br>
+          Invalid Twitter Username: #{testInvalidTwitterUsername}</br>
+        </p>
+      >>;
+    }
+    {
+      append("body", msg);
+      append("body", "<div id='main'></div>");
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfile_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile = PeerIndex:getProfile(testValidTwitterUsername);
+      testStatus = (piProfile.pick("$.twitter") eq 'edorcutt') => testPass | testFail; 
+      msg = "Test getProfile with Valid twitter username: #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfile_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile = PeerIndex:getProfile(testInvalidTwitterUsername);
+      testStatus = (piProfile.pick("$.twitter") eq '') => testPass | testFail; 
+      msg = "Test getProfile with Invalid twitter username: #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_Rank_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piRank     = PeerIndex:Rank(piProfile);
+      testStatus = (1 <= piRank && piRank <= 100) => testPass | testFail; 
+      msg = "Test Rank with Valid twitter username: #{piRank} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_Authority_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piAuthority     = PeerIndex:Authority(piProfile);
+      testStatus = (1 <= piAuthority && piAuthority <= 100) => testPass | testFail; 
+      msg = "Test Authority with Valid twitter username: #{piAuthority} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_Activity_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piActivity     = PeerIndex:Activity(piProfile);
+      testStatus = (1 <= piActivity && piActivity <= 100) => testPass | testFail; 
+      msg = "Test Activity with Valid twitter username: #{piActivity} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_Audience_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piAudience     = PeerIndex:Audience(piProfile);
+      testStatus = (1 <= piAudience && piAudience <= 100) => testPass | testFail; 
+      msg = "Test Audience with Valid twitter username: #{piAudience} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_Realness_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piRealness     = PeerIndex:Realness(piProfile);
+      testStatus = (1 <= piRealness && piRealness <= 100) => testPass | testFail; 
+      msg = "Test Realness with Valid twitter username: #{piRealness} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_ScreenName_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piScreenName = PeerIndex:ScreenName(piProfile);
+      testStatus = (piScreenName eq 'edorcutt') => testPass | testFail; 
+      msg = "Test ScreenName with Valid twitter username: #{piScreenName} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_RealName_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piRealName = PeerIndex:RealName(piProfile);
+      testStatus = (piRealName eq 'Ed Orcutt') => testPass | testFail; 
+      msg = "Test RealName with Valid twitter username: #{piRealName} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_Slug_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piSlug = PeerIndex:Slug(piProfile);
+      testStatus = (piSlug eq 'edorcutt') => testPass | testFail; 
+      msg = "Test Slug with Valid twitter username: #{piSlug} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_PeerIndexURL_Valid_Username {
+    select when pageview ".*"
+    pre {
+      piProfile  = PeerIndex:getProfile(testValidTwitterUsername);
+      piURL = PeerIndex:PeerIndexURL(piProfile);
+      testStatus = (piURL eq "http://pi.mu/DwJ") => testPass | testFail; 
+      msg = "Test PeerIndexURL with Valid twitter username: #{piURL} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
