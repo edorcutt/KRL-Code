@@ -1,0 +1,138 @@
+ruleset a169x323 {
+  meta {
+    name "Peeps-On-Empire-Module-Test"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: https://gist.github.com/981971
+
+    description <<
+      Test Peeps On Empire Module
+      http://exampley.com/?appid=a169x323
+    >>
+
+    author "Ed Orcutt"
+    logging on
+
+    use module a169x322 alias PeepsOnEAv
+  }
+
+  dispatch {}
+  global {
+    // ----------------------------------------------------------------
+    // Private Values for Testing Purposes
+    // ----------------------------------------------------------------
+
+    testValidTwitterUsername   = "edorcutt";
+    testInvalidTwitterUsername = "solargroovy";
+    testPass = "<span class='testpass'>Passed</span>";
+    testFail = "<span class='testfail'>Failed</span>";
+
+    css <<
+      .testpass {color:green;}
+      .testfail {color:red;}
+    >>
+  }
+
+  // ========================================================================
+  // Rules to Test the Module
+  // ========================================================================
+
+  rule Test_Start {
+    select when pageview ".*"
+    pre {
+      msg = <<
+        <h3>Peeps On Empire Avenue Module Test Results</h3>
+        <p>
+          Twitter Username with EAv: #{testValidTwitterUsername}</br>
+          Twitter Username without EAv: #{testInvalidTwitterUsername}</br>
+        </p>
+      >>;
+    }
+    {
+      append("body", msg);
+      append("body", "<div id='main'></div>");
+    }
+  }
+  // ----------------------------------------------------------------
+  rule Test_TickerSymbol_Username_EAv {
+    select when pageview ".*"
+    pre {
+      myTick = PeepsOnEAv:TickerSymbol(testValidTwitterUsername);
+      testStatus = (myTick eq "EDOISM") => testPass | testFail; 
+      msg = "Test TickerSymbol with twitter username with EAv account: #{myTick} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_TickerSymbol_Username_No_EAv {
+    select when pageview ".*"
+    pre {
+      myTick = PeepsOnEAv:TickerSymbol(testInvalidTwitterUsername);
+      testStatus = (myTick eq "@solargroovy") => testPass | testFail; 
+      msg = "Test TickerSymbol with twitter username without EAv account: #{myTick} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_SharePrice_Username_EAv {
+    select when pageview ".*"
+    pre {
+      myPrice = PeepsOnEAv:SharePrice(testValidTwitterUsername);
+      testStatus = (myPrice > 0) => testPass | testFail; 
+      msg = "Test SharePrice with twitter username with EAv account: #{myPrice} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_SharePrice_Username_No_EAv {
+    select when pageview ".*"
+    pre {
+      myPrice = PeepsOnEAv:SharePrice(testInvalidTwitterUsername);
+      testStatus = (myPrice > 0) => testPass | testFail; 
+      msg = "Test SharePrice with twitter username without EAv account: #{myPrice} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_ProfileURL_Username_EAv {
+    select when pageview ".*"
+    pre {
+      myProfile = PeepsOnEAv:ProfileURL(testValidTwitterUsername);
+      testStatus = (myProfile eq "http://www.empireavenue.com/EDOISM") => testPass | testFail; 
+      msg = "Test ProfileURL with twitter username with EAv account: #{myProfile} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_ProfileURL_Username_No_EAv {
+    select when pageview ".*"
+    pre {
+      myProfile = PeepsOnEAv:ProfileURL(testInvalidTwitterUsername);
+      testStatus = (myProfile eq "http://www.empireavenue.com/ipo/twitter/solargroovy") => testPass | testFail; 
+      msg = "Test ProfileURL with twitter username without EAv account: #{myProfile} #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
