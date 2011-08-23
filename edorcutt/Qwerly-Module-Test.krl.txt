@@ -1,0 +1,248 @@
+ruleset a169x317 {
+  meta {
+    name "Qwerly-Module-Test"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: http://edorcutt.posterous.com/new-release-kynetx-developer-module-for-qwerl
+
+    description <<
+      Test Qwerly API Module
+      http://exampley.com/?appid=a169x317
+    >>
+
+    author "Ed Orcutt"
+    logging on
+
+    use module a169x316 alias qwerly with qwerlyapikey = "REDACT KEY"
+  }
+
+  dispatch {}
+  global {
+    testValidTwitterUsername = "edorcutt";
+    testInvalidTwitterUsername = "bogusxxx333";
+    testPass = "<span class='testpass'>Passed</span>";
+    testFail = "<span class='testfail'>Failed</span>";
+
+    css <<
+      .testpass {color:green;}
+      .testfail {color:red;}
+    >>
+  }
+
+  // ------------------------------------------------------------------------
+  rule Test_Start {
+    select when pageview ".*"
+    pre {
+      msg = <<
+        <h3>Qwerly Module Test Results</h3>
+        <p>
+          Valid Twitter Username: #{testValidTwitterUsername}</br>
+          Invalid Twitter Username: #{testInvalidTwitterUsername}</br>
+        </p>
+      >>;
+    }
+    {
+      append("body", msg);
+      append("body", "<div id='main'></div>");
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_profileByTwitterUsername_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      testStatus = (qwerlyProfile.pick("$.status") == 200) => testPass | testFail; 
+      msg = "Test profileByTwitterUsername with Valid twitter username: #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_profileByTwitterUsername_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInvalidTwitterUsername);
+      testStatus = (qwerlyProfile.pick("$.status") == 202) => testPass | testFail; 
+      msg = "Test profileByTwitterUsername with Invalid twitter username: #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileStatus_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      profileStatus = qwerly:getProfileStatus(qwerlyProfile);
+      testStatus = (profileStatus == 200) => testPass | testFail; 
+      msg = "Test getProfileStatus with Valid twitter username  (#{profileStatus} == 200): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileStatus_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInValidTwitterUsername);
+      profileStatus = qwerly:getProfileStatus(qwerlyProfile);
+      testStatus = (profileStatus == 404) => testPass | testFail; 
+      msg = "Test getProfileStatus with Invalid twitter username (#{profileStatus} == 404): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileName_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      profileName = qwerly:getProfileName(qwerlyProfile);
+      testStatus = (profileName eq 'Ed Orcutt') => testPass | testFail; 
+      msg = "Test getProfileName with Valid twitter username ('#{profileName}' eq 'Ed Orcutt'): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileName_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInvalidTwitterUsername);
+      profileName = qwerly:getProfileName(qwerlyProfile);
+      testStatus = (profileName eq '') => testPass | testFail; 
+      msg = "Test getProfileName with Invalid twitter username ('#{profileName}' eq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileLocation_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      profileLocation = qwerly:getProfileLocation(qwerlyProfile);
+      testStatus = (profileLocation neq '') => testPass | testFail; 
+      msg = "Test getProfileLocation with Valid twitter username ('#{profileLocation}' neq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileLocation_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInvalidTwitterUsername);
+      profileLocation = qwerly:getProfileLocation(qwerlyProfile);
+      testStatus = (profileLocation eq '') => testPass | testFail; 
+      msg = "Test getProfileLocation with Invalid twitter username ('#{profileLocation}' eq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileWebsite_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      profileWebsite = qwerly:getProfileWebsite(qwerlyProfile);
+      testStatus = (profileWebsite neq '') => testPass | testFail; 
+      msg = "Test getProfileWebsite with Valid twitter username ('#{profileWebsite}' neq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileWebsite_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInvalidTwitterUsername);
+      profileWebsite = qwerly:getProfileWebsite(qwerlyProfile);
+      testStatus = (profileWebsite eq '') => testPass | testFail; 
+      msg = "Test getProfileWebsite with Invalid twitter username ('#{profileWebsite}' eq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileDescription_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      profileDescription = qwerly:getProfileDescription(qwerlyProfile);
+      testStatus = (profileDescription neq '') => testPass | testFail; 
+      msg = "Test getProfileDescription with Valid twitter username ('#{profileDescription}' neq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileDescription_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInvalidTwitterUsername);
+      profileDescription = qwerly:getProfileDescription(qwerlyProfile);
+      testStatus = (profileDescription eq '') => testPass | testFail; 
+      msg = "Test getProfileDescription with Invalid twitter username ('#{profileDescription}' eq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileServices_Valid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testValidTwitterUsername);
+      profileServices = qwerly:getProfileServices(qwerlyProfile);
+      testStatus = (profileServices neq '') => testPass | testFail; 
+      msg = "Test getProfileServices with Valid twitter username ('#{profileServices}' neq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  rule Test_getProfileServices_Invalid_Username {
+    select when pageview ".*"
+    pre {
+      qwerlyProfile = qwerly:profileByTwitterUsername(testInvalidTwitterUsername);
+      profileServices = qwerly:getProfileServices(qwerlyProfile);
+      testStatus = (profileServices eq '') => testPass | testFail; 
+      msg = "Test getProfileServices with Invalid twitter username ('#{profileServices}' eq ''): #{testStatus}</br>";
+    }
+    {
+      append("#main", msg);
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
