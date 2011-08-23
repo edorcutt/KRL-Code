@@ -1,0 +1,65 @@
+ruleset a169x306 {
+  meta {
+    name "SendGoogle"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: https://gist.github.com/943699
+
+    description <<
+      Facebook Send Button on Google
+    >>
+
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+  }
+
+  dispatch {
+    domain "www.google.com"
+  }
+
+  global {
+    css <<
+      .likeplus-google {
+        margin-left: 6px;
+        vertical-align: top;
+        height: 20px;
+      }
+    >>;
+  }
+
+  // ------------------------------------------------------------------------
+  // Insert Facebook Send Button on Google Search Results pages
+
+  rule LikePlus_Google_Search {
+    select when pageview "www.google.com"
+    {
+      emit <|
+        // https://gist.github.com/943664 AKO ROCKS! 
+        var head = $KOBJ("head").get(0); // or just document.getElementsByTagName("head")[0], but I <3 jQuery
+        var script = document.createElement("script");
+        script.src = "http://connect.facebook.net/en_US/all.js#xfbml=1";
+        head.appendChild(script);
+
+        // ------------------------------------------------
+        // iterate thru each search result list item
+        $K('div#ires ol li.g:not([likeplus])').each(function() {
+        
+          // grab the full URL of the search result
+          var fullURL = $K(this).find('.l').attr('href');
+          // var thisDomain = KOBJ.get_host(fullURL);
+          // The Facebook Like button iFrame
+          var likebox = '<span class="likeplus-google"><fb:send href="' + fullURL + '" font="Arial"></fb:send></span>';
+          
+          $K(this).attr('likeplus', 'true');
+          $K(this).find('h3.r').append(likebox);
+        });
+
+      |>;
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
