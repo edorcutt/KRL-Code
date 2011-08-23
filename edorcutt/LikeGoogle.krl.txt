@@ -1,0 +1,93 @@
+ruleset a169x306 {
+  meta {
+    name "LikeGoogle"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: https://gist.github.com/943473
+
+    description <<
+      Facebook Like Button on Google
+
+      Facebook > Social Plugins > Like Button
+      http://developers.facebook.com/docs/reference/plugins/like/
+    >>
+
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+  }
+
+  dispatch {
+    domain "www.google.com"
+  }
+
+  global {
+    Ruleset_RID = page:env("rid");
+
+    css <<
+      .likeplus-google {
+        margin-left: 6px;
+        vertical-align: top;
+        height: 20px;
+      }
+    >>;
+  }
+
+  // ------------------------------------------------------------------------
+  // Insert Facebook Like Button on Google Search Results pages
+
+  rule LikePlus_Google_Search_JS {
+    select when pageview "www.google.com"
+    {
+      emit <|
+        // ------------------------------------------------
+        var StableTimerID = 0;
+        
+        function watch_google_instant(delay) {
+          delay = typeof(delay) != 'undefined' ? delay : 1000;
+          
+          clearTimeout(StableTimerID);
+          StableTimerID = window.setTimeout( function() {
+
+            $K('div#ires ol li.g:not([likeplus])').each(function() {
+        
+              // grab the full URL of the search result
+              var fullURL = $K(this).find('.l').attr('href');
+              var likebox = '<span class="likeplus-google"><iframe frameborder="0" scrolling="no" allowtransparency="true" style="margin-right: -8px; z-index: inherit; width: 90px; height: 20px;" src="http:\/\/www.facebook.com/plugins/like.php?href=' + fullURL  + '&amp;layout=button_count&amp;show_faces=false&amp;width=0&amp;action=like&amp;font=arial&amp;colorscheme=light&amp;height=21"></iframe></span>';
+          
+              $K(this).attr('likeplus', 'true');
+              $K(this).find('h3.r').append(likebox);
+            });
+          }, delay);
+          
+        }
+        
+        KOBJ.watchDOM("#rso", watch_google_instant);
+        
+        // Prime the pump, to catch the first time
+        watch_google_instant(10000);
+
+        // ------------------------------------------------
+        // iterate thru each search result list item
+        $K('div#ires ol li.g:not([likeplus])').each(function() {
+        
+          // grab the full URL of the search result
+          var fullURL = $K(this).find('.l').attr('href');
+          // var thisDomain = KOBJ.get_host(fullURL);
+          // The Facebook Like button iFrame
+          var likebox = '<span class="likeplus-google"><iframe frameborder="0" scrolling="no" allowtransparency="true" style="margin-right: -8px; z-index: inherit; width: 90px; height: 20px;" src="http:\/\/www.facebook.com/plugins/like.php?href=' + fullURL  + '&amp;layout=button_count&amp;show_faces=false&amp;width=0&amp;action=like&amp;font=arial&amp;colorscheme=light&amp;height=21"></iframe></span>';
+          
+          // console.log("urlTemp: ", fullURL);
+          // $K(this).attr('likeplus', fullURL);
+          $K(this).attr('likeplus', 'true');
+          $K(this).find('h3.r').append(likebox);
+        });
+
+      |>;
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
