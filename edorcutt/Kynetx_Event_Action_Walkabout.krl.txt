@@ -1,0 +1,74 @@
+ruleset a169x258 {
+    meta {
+        name "Kynetx_Event_Action_Walkabout"
+
+        // KSLCode
+        // Author: Ed Orcutt
+        // Origin: http://edorcutt.posterous.com/kynetx-event-action-walkabout
+
+        description <<
+            LOBOSLLC Demo: Kynetx Event Action Walkabout
+        >>
+        author "Ed Orcutt, LOBOSLLC"
+        logging on
+    }
+
+    global {
+        Remote_Ruleset = "a169x259";
+        Local_Ruleset  = "a169x258";
+    }
+
+    // ------------------------------------------------------------------
+    // Raise an Event Action within the same Ruleset
+    
+    rule Raise_Event_Action_Within_Ruleset is active {
+        select when pageview ".*"
+        {
+            notify("Kynetx Event Walkabout", "Raise_Event_Action_Within_Ruleset") with sticky = true;
+            raise_event("event_within_ruleset");
+        }
+    }
+    
+    rule Catch_Event_Raised_Within_Ruleset {
+        select when web event_within_ruleset
+        {
+            notify("Catch_Local_Event", "Received Within Ruleset!") with sticky = true;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Raise an Event Action to a remote Ruleset
+    
+    rule Raise_Event_Action_To_Remote_Ruleset is active {
+        select when pageview ".*"
+        {
+            notify("Kynetx Event Walkabout", "Raise_Event_To_Remote_Ruleset") with sticky = true;
+            raise_event("event_remote_ruleset") with app_id = Remote_Ruleset;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Raise an Event Action to a remote Ruleset
+
+    rule Raise_Event_Action_To_Remote_Ruleset_Callback is active {
+        select when pageview ".*"
+        {
+            notify("Kynetx Event Walkabout", "Raise_Remote_Ruleset_Callback") with sticky = true;
+            raise_event("event_remote_callback") with app_id = Remote_Ruleset
+                and parameters = {
+                    "callback_rid" : Local_Ruleset,
+                    "callback_evt" : "event_callback"
+                    };
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Receive Callback Event from remote Ruleset
+
+    rule Catch_Event_Callback_From_Remote_Ruleset {
+        select when web event_callback
+        {
+            notify("Catch_Event_Callback", "Received Callback Event!") with sticky = true;
+        }
+    }
+}

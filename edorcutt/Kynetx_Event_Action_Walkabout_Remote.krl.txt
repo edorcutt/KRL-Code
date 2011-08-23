@@ -1,0 +1,41 @@
+ruleset a169x259 {
+    meta {
+        name "Kynetx_Event_Action_Walkabout_Remote"
+
+        // KSLCode
+        // Author: Ed Orcutt
+        // Origin: http://edorcutt.posterous.com/kynetx-event-action-walkabout
+
+        description <<
+            LOBOSLLC Demo: Kynetx Event Action Walkabout Remote Ruleset
+        >>
+        author "Ed Orcutt, LOBOSLLC"
+        logging on
+    }
+
+    // ------------------------------------------------------------------
+    // Receive Event from another Ruleset
+    
+    rule Catch_Event_Raised_Remote_Ruleset {
+        select when web event_remote_ruleset
+        {
+            notify("Catch_Remote_Event", "Received from remote Ruleset!") with sticky = true;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Receive Event from another Ruleset with a Callback
+
+    rule Catch_Event_Raised_Remote_Callback {
+        select when web event_remote_callback
+        pre {
+            callback_rid = event:param("callback_rid");
+            callback_evt = event:param("callback_evt");
+        }
+        {
+            notify("Catch_Remote_Callback", "Received from remote Ruleset!") with sticky = true;
+            notify("Now Raise Callback", "rid: "+callback_rid+" name: "+callback_evt) with sticky = true;
+            raise_event(callback_evt) with app_id = callback_rid;
+        }
+    }
+}
