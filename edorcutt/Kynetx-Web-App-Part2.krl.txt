@@ -1,0 +1,186 @@
+ruleset a169x234 {
+  meta {
+    name "KAPP02 - Kynetx Web Application Part 2"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: http://edorcutt.posterous.com/kynetx-web-application-part-2-navigation
+
+    description <<
+      Kynetx Web Application Part 2, Navigation
+    >>
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+  }
+
+  dispatch {
+    domain "www.lobosllc.com"
+  }
+
+  global {
+  }
+  
+  // ------------------------------------------------------------------
+  rule Kapp_Init {
+    select when pageview "/kapp/"
+      pre {
+        kappSTYLE = <<
+<style type="text/css">
+* { padding: 0; margin: 0; }
+
+body {
+ font-family: Arial, Helvetica, sans-serif;
+ font-size: 13px;
+}
+#wrapper { 
+ margin: 0 auto;
+ width: 502px;
+}
+#header {
+ width: 480px;
+ color: #FFF;
+ padding: 10px;
+ border: 1px solid #ccc;
+ height: 47px;
+ margin: 10px 0px 0px 0px;
+ background: #333;
+}
+#navigation {
+ width: 480px;
+ color: #333;
+ padding: 10px;
+ border: 1px solid #ccc;
+ margin: 0px 0px 0px 0px;
+ background: #BD9C8C;
+}
+#content { 
+ width: 480px;
+ color: #333;
+ border: 1px solid #ccc;
+ background: #F2F2E6;
+ margin: 0px 0px 0px 0px;
+ padding: 10px;
+ height: 350px;
+}
+#footer { 
+ width: 480px;
+ color: #333;
+ border: 1px solid #ccc;
+ background: #BD9C8C;
+ margin: 0px 0px 10px 0px;
+ padding: 10px;
+}
+.underlinemenu {
+ font-weight: bold;
+ width: 100%;
+}
+.underlinemenu ul {
+ padding: 6px 0 7px 0;
+ margin: 0;
+ text-align: center;
+ }
+.underlinemenu ul li {
+ display: inline;
+}
+.underlinemenu ul li a {
+ color: #333;
+ padding: 6px 3px 4px 3px;
+ margin-right: 20px;
+ text-decoration: none;
+ border-bottom: 3px solid gray;
+}
+.underlinemenu ul li a:hover, .underlinemenu ul li a.selected {
+ border-bottom-color: #981b1e;
+}
+.logo {
+ text-align: center;
+}
+</style>
+        >>;
+        
+        kappCONTENT = <<
+  <!-- Begin Wrapper -->
+  <div id="wrapper">
+
+    <!-- Begin Header -->
+    <div id="header">
+      <div class="logo"><img src="/images/LOBOSLLC_LOGO_NAME_258x44.png" alt="LOBOSLLC" /></div>
+    </div>
+    <!-- End Header -->
+    
+    <!-- Begin Naviagtion -->
+    <div id="navigation">
+      
+      <div class="underlinemenu">
+        <ul>
+          <li><a href="javascript:void(0);" id="navHome">Home</a></li>
+          <li><a href="javascript:void(0);" id="navContact">Contact</a></li>
+          <li><a href="javascript:void(0);" id="navAbout">About</a></li>
+        </ul>
+      </div>
+      
+    </div>
+    <!-- End Naviagtion -->
+    
+    <!-- Begin Content -->
+    <div id="content">
+      
+      Kynetx Web Application Content
+      
+      
+    </div>
+    <!-- End Content -->
+    
+    <!-- Begin Footer -->
+    <div id="footer">
+      
+      Kynetx Web Application Footer
+      
+    </div>
+    <!-- End Footer -->
+    
+  </div>
+  <!-- End Wrapper -->
+        >>;
+      }
+      every {
+        replace_html("#KynetxKodeMonkey", "");
+        append("head", kappSTYLE);
+        append("body", kappCONTENT);
+        watch("#navHome", "click");
+        watch("#navContact", "click");
+        watch("#navAbout", "click");
+      }
+  }
+  
+  // ------------------------------------------------------------------
+  rule Kapp_Navigate_Home {
+    select when click "#navHome"
+      {
+        replace_inner("#content", "You are Home.");
+      }
+  }
+  
+  // ------------------------------------------------------------------
+  rule Kapp_Navigate_Contact {
+    select when click "#navContact"
+      {
+        replace_inner("#content", "Your contact information here.");
+      }
+  }
+  
+  // ------------------------------------------------------------------
+  rule Kapp_Navigate_About {
+    select when click "#navAbout"
+      pre {
+        msg = <<
+          <p>The Kynetx Kode Monkey ...</p>
+          <p>&nbsp;</p>
+          <p style="text-align: center;"><img src="img/kodemonkey.jpg" height="240" width="179" /></p>
+        >>;
+      }
+      {
+        replace_inner("#content", msg);
+      }
+  } 
+}

@@ -1,0 +1,122 @@
+ruleset a169x233 {
+  meta {
+    name "KAPP01 - Kynetx Web Application Part 1"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: http://edorcutt.posterous.com/kynetx-web-application-part-1-loading-the-htm
+
+    description <<
+      Kynetx Web Application Part 1, Loading HTML and CSS
+    >>
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+  }
+
+  dispatch {
+    domain "www.lobosllc.com"
+  }
+
+  global {
+  }
+  
+  rule Kapp_Init {
+    select when pageview "/kapp/"
+      pre {
+        kappSTYLE = <<
+<style type="text/css">
+* { padding: 0; margin: 0; }
+
+body {
+ font-family: Arial, Helvetica, sans-serif;
+ font-size: 13px;
+}
+#wrapper { 
+ margin: 0 auto;
+ width: 502px;
+}
+#header {
+ width: 480px;
+ color: #333;
+ padding: 10px;
+ border: 1px solid #ccc;
+ height: 60px;
+ margin: 10px 0px 0px 0px;
+ background: #DAC8BF;
+}
+#navigation {
+ width: 480px;
+ color: #333;
+ padding: 10px;
+ border: 1px solid #ccc;
+ margin: 0px 0px 0px 0px;
+ background: #BD9C8C;
+}
+#content { 
+ width: 480px;
+ color: #333;
+ border: 1px solid #ccc;
+ background: #F2F2E6;
+ margin: 0px 0px 0px 0px;
+ padding: 10px;
+ height: 350px;
+}
+#footer { 
+ width: 480px;
+ color: #333;
+ border: 1px solid #ccc;
+ background: #BD9C8C;
+ margin: 0px 0px 10px 0px;
+ padding: 10px;
+}
+</style>
+        >>;
+        
+        kappCONTENT = <<
+  <!-- Begin Wrapper -->
+  <div id="wrapper">
+
+    <!-- Begin Header -->
+    <div id="header">
+      
+      Kynetx Web Application Header 
+      
+    </div>
+    <!-- End Header -->
+    
+    <!-- Begin Naviagtion -->
+    <div id="navigation">
+      
+      Kynetx Web Application Navigation
+      
+    </div>
+    <!-- End Naviagtion -->
+    
+    <!-- Begin Content -->
+    <div id="content">
+      
+      Kynetx Web Application Content
+      
+      
+    </div>
+    <!-- End Content -->
+    
+    <!-- Begin Footer -->
+    <div id="footer">
+      
+      Kynetx Web Application Footer
+      
+    </div>
+    <!-- End Footer -->
+    
+  </div>
+  <!-- End Wrapper -->
+        >>;
+      }
+      every {
+        replace_html("#KynetxKodeMonkey", "");
+        append("head", kappSTYLE);
+        append("body", kappCONTENT);
+      }
+  }
+}
