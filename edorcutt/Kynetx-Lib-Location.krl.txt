@@ -1,0 +1,50 @@
+ruleset a169x298 {
+  meta {
+    name "Kynetx-Lib-Location"
+
+    // KSLCode
+    // Author: Ed Orcutt
+    // Origin: http://edorcutt.posterous.com/kynetx-krl-back-to-basics-location-library
+
+    description <<
+      Kynetx KRL Library: Location
+      Documentation: http://docs.kynetx.com/docs/Locations
+      Demo: http://exampley.com/?appid=a169x298
+    >>
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+  }
+
+  dispatch {  }
+
+  global {  }
+
+  rule KRL_Library_Location {
+    select when pageview ".*"
+    pre {
+      country_code = location:country_code();
+      country_name = location:country_name();
+      region = location:region();
+      city = location:city();
+      postal_code = location:postal_code();
+      latitude = location:latitude();
+      longitude = location:longitude();
+      dma_code = location:dma_code();
+      area_code = location:area_code();
+      your_locations = <<
+        country code: #{country_code}<br>
+        country_name: #{country_name}<br>
+        region: #{region}<br>
+        city: #{city}<br>
+        postal_code: #{postal_code}<br>
+        latitude: #{latitude}<br>
+        longitude: #{longitude}<br>
+        dma_code: #{dma_code}<br>
+        area_code: #{area_code}
+      >>;
+    }
+    {
+      notify("Kynetx KRL Library: Location", your_locations) with sticky = true;
+    }
+  }
+}
