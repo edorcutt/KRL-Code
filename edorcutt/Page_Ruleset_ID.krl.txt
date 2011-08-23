@@ -1,0 +1,26 @@
+ruleset a169x256 {
+    meta {
+        name "LOBOSLLC Demo: Page_Ruleset_ID"
+
+        // KSLCode
+        // Author: Ed Orcutt
+        // Origin: https://gist.github.com/857718
+
+        description <<
+            LOBOSLLC KRL Demo: Page Ruleset ID
+        >>
+        author "Ed Orcutt, LOBOSLLC"
+        logging on
+    }
+
+    dispatch { domain ".*" }
+    global {}
+    
+    rule display_ruleset_id {
+        select when pageview ".*"
+        pre {
+            myRID = page:env("rid");
+        }
+        notify("Demo: Page Ruleset ID", myRID) with sticky = true;
+    }
+}
