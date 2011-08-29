@@ -1,0 +1,43 @@
+ruleset a169x394 {
+  meta {
+    name "Twitter-Authorize-Legacy"
+
+    description <<
+      Twitter Application Authorization Demo using Kynetx Twitter Library
+
+      Docs: http://docs.kynetx.com/docs/Twitter
+      Demo: http://ktest.heroku.com/a169x394
+    >>
+
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+
+    key twitter {
+      "consumer_key"    : "YOUR KEY HERE",
+      "consumer_secret" : "YOUR SECRET HERE"
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  rule authorize_twitter {
+    select when pageview ".*"
+    if not twitter:authorized() then {
+      twitter:authorize() with sticky = true;
+    }
+    fired {
+      last;
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  rule first_Tweet {
+    select when pageview ".*"
+    {
+      twitter:update("Twitter Application Authorization Demo using Kynetx Twitter Library");
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
