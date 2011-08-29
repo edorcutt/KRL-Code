@@ -1,0 +1,91 @@
+ruleset a169x395 {
+  meta {
+    name "Twitter-Authorize-OAuthModule"
+
+    description <<
+      Twitter Application Authorization Demo using Kynetx OAuthModule
+
+      Docs: http://docs.kynetx.com/docs/OAuthModule
+      Demo: http://ktest.heroku.com/a169x395
+    >>
+
+    author "Ed Orcutt, LOBOSLLC"
+    logging on
+
+    key twitter {
+      "consumer_key"    : "YOUR KEY HERE",
+      "consumer_secret" : "YOUR SECRET HERE"
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  rule authorize_twitter {
+    select when pageview ".*"
+           or   web authorize_twitter
+    if (not twitter:authorized()) then {
+      noop();
+    }
+    fired {
+      raise explicit event authorize_twitter_button
+    } else {
+      raise explicit event first_tweet
+    }
+  }
+  // ------------------------------------------------------------------------
+  rule authorize_twitter_button {
+    select when explicit authorize_twitter_button
+    pre {
+      auth_button = <<
+        <img class="twitter-auth" src="http://www.lobosllc.com/demo/twitterauth/twitter-signin.png" alt="Twitter Login" />
+      >>;
+      auth_url = oauthmodule:get_auth_url('twitter',{'raise_callback_event' : 'kytry'});
+      appRID   = meta:rid();
+    }
+    {
+      append("body", auth_button);
+
+      emit <<
+        // --------------------------------------------
+        $K('img.twitter-auth').click( function() {
+
+          // Open popup window for Twitter Authorization
+          var twAuthWindow = window.open(auth_url, "TwitterAuthorizeWindow", "toolbar=no, location=yes, directories=no, status=no, menubar=no, scrollbars=no, menubar=no, resizable=no, width=700, height=500");
+
+          // Check to see if popup window is closed every 2 seconds
+          var twCheckTimer = window.setInterval( function() {
+            if (twAuthWindow.closed) {
+              clearInterval(twCheckTimer);
+              var app = KOBJ.get_application(appRID);
+              app.raise_event("authorize_twitter");
+            };
+          }, 2000);
+        });
+      >>;
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  rule twitter_oauth_callback {
+    select when oauth_callback kytry
+    {
+      emit <<
+        window.close();
+      >>;
+    }
+    fired {
+      last;
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  rule first_Tweet {
+    select when explicit first_tweet
+    {
+      twitter:update("Twitter Application Authorization Demo using Kynetx OAuthModule");
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Beyond here there be dragons :)
+  // ------------------------------------------------------------------------
+}
